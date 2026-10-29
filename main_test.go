@@ -1,7 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
+	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -96,7 +100,7 @@ func TestUserServiceCreateNameRequired(t *testing.T) {
 	service := NewUserService(repository)
 
 	_, err := service.Create(CreateUserInput{
-		Name: "     ",
+		Name:  "     ",
 		Email: "citra@example.com",
 	})
 
@@ -126,5 +130,132 @@ func TestUserServiceGetByIDNotFound(t *testing.T) {
 			"expected ErrUserNotFound, got %v",
 			err,
 		)
+	}
+}
+
+func TestCreateUserHandlerSuccess(t *testing.T) {
+	// Arrange: siapkan dependency.
+	repository := &FakeUserRepository{
+		nextID: 3,
+	}
+
+	service := NewUserService(repository)
+	handler := NewUserHandler(service)
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("POST /users", handler.CreateHandler)
+
+	body := strings.NewReader(`{
+		"name": "Citra",
+		"email": "citra@example.com"
+	}`)
+
+	request := httptest.NewRequest(
+		http.MethodPost,
+		"/users",
+		body,
+	)
+
+	request.Header.Set(
+		"Content-Type",
+		"application/json",
+	)
+
+	response := httptest.NewRecorder()
+
+	// Act: kirim request ke router.
+	mux.ServeHTTP(response, request)
+
+	// Assert: periksa HTTP status.
+	if response.Code != http.StatusCreated {
+		t.Fatalf(
+			"expected status %d, got %d",
+			http.StatusCreated,
+			response.Code,
+		)
+	}
+
+	// Decode JSON response.
+	var user User
+
+	if err := json.NewDecoder(response.Body).Decode(&user); err != nil {
+		t.Fatalf(
+			"failed to decode response: %v",
+			err,
+		)
+	}
+
+	if user.ID != 3 {
+		t.Errorf("expected ID 3, got %d", user.ID)
+	}
+
+	if user.Name != "Citra" {
+		t.Errorf(
+			"expected name Citra, got %s",
+			user.Name,
+		)
+	}
+
+	if user.Email != "citra@example.com" {
+		t.Errorf(
+			"expected email citra@example.com, got %s",
+			user.Email,
+		)
+	}
+}
+
+func TestCreateUserHandlerNameRequired(t *testing.T) {
+	repository := &FakeUserRepository{
+		nextID: 3,
+	}
+
+	service := NewUserService(repository)
+	handler := NewUserHandler(service)
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("POST /users", handler.CreateHandler)
+
+	body := strings.NewReader(`{
+		"name": "",
+		"email": "citra@example.com"
+	}`)
+
+	request := httptest.NewRequest(
+		http.MethodPost,
+		"/users",
+		body,
+	)
+
+	response := httptest.NewRecorder()
+
+	mux.ServeHTTP(response, request)
+
+	if response.Code != http.StatusBadRequest {
+		t.Fatalf(
+			"expected status %d, got %d",
+			http.StatusBadRequest,
+			response.Code,
+		)
+	}
+
+	var result map[string]string
+
+	if err := json.NewDecoder(response.Body).Decode(&result); err != nil {
+		t.Fatalf(
+			"failed to decode response: %v",
+			err,
+		)
+	}
+
+	if result["error"] != ErrNameRequired.Error() {
+		t.Errorf(
+			"expected error %q, got %q",
+			ErrNameRequired.Error(),
+			result["error"],
+		)
+	}
+
+	if len(repository.users) != 0 {
+		t.Error("repository should not create a user")
 	}
 }
