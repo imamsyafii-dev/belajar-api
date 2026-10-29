@@ -169,10 +169,10 @@ func (service UserService) Create(
 // Handler sekarang menggunakan service, bukan repository.
 // ==================================================
 type UserHandler struct {
-	service UserService
+	service *UserService
 }
 
-func NewUserHandler(service UserService) *UserHandler {
+func NewUserHandler(service *UserService) *UserHandler {
 	return &UserHandler{
 		service: service,
 	}
@@ -273,7 +273,7 @@ func writeJSON(w http.ResponseWriter, status int, data any) {
 func main() {
 	repository := NewMemoryUserRepository()
 	service := NewUserService(repository)
-	userHandler := NewUserHandler(*service)
+	userHandler := NewUserHandler(service)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /users", userHandler.ListHandler)
