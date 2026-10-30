@@ -11,58 +11,14 @@ import (
 )
 
 // ==================================================
-// 1. MODEL DAN INPUT
-// ==================================================
-type User struct {
-	ID    int    `json:"id"`
-	Name  string `json:"name"`
-	Email string `json:"email"`
-}
-
-// Bentuk JSON dari HTTP request.
-type CreateUserRequest struct {
-	Name  string `json:"name"`
-	Email string `json:"email"`
-}
-
-// Input untuk service.
-// Tidak menggunakan JSON tag karena bukan bagian HTTP
-type CreateUserInput struct {
-	Name  string
-	Email string
-}
-
-type UpdateUserRequest struct {
-	Name  string `json:"name"`
-	Email string `json:"email"`
-}
-
-type UpdateUserInput struct {
-	ID    int
-	Name  string
-	Email string
-}
-
-// ==================================================
-// 2. BUSINESS ERRORS
+// BUSINESS ERRORS
 // ==================================================
 var ErrUserNotFound = errors.New("user tidak ditemukan")
 var ErrNameRequired = errors.New("name wajib diisi")
 var ErrEmailRequired = errors.New("email wajib diisi")
 
 // ==================================================
-// 3. REPOSITORY INTERFACE
-// ==================================================
-type UserRepository interface {
-	List() []User
-	FindByID(id int) (User, bool)
-	Create(name string, email string) User
-	UpdateByID(id int, name string, email string) (User, bool)
-	DeleteByID(id int) bool
-}
-
-// ==================================================
-// 4. MEMORY REPOSITORY
+// MEMORY REPOSITORY
 // ==================================================
 type MemoryUserRepository struct {
 	mutex  sync.RWMutex
@@ -160,7 +116,7 @@ func (repository *MemoryUserRepository) DeleteByID(id int) bool {
 }
 
 // ==================================================
-// 5. SERVICE
+// SERVICE
 // Bagian baru yang berada di antara handler dan repository.
 // ==================================================
 
@@ -246,7 +202,7 @@ func (service UserService) DeleteByID(id int) error {
 }
 
 // ==================================================
-// 6. HTTP HANDLER
+// HTTP HANDLER
 // Handler sekarang menggunakan service, bukan repository.
 // ==================================================
 type UserHandler struct {
@@ -431,7 +387,7 @@ func (handler UserHandler) DeleteHandler(
 }
 
 // ==================================================
-// 7. JSON HELPER
+// JSON HELPER
 // ==================================================
 
 func writeJSON(w http.ResponseWriter, status int, data any) {
