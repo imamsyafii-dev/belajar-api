@@ -32,6 +32,17 @@ type CreateUserInput struct {
 	Email string
 }
 
+type UpdateUserRequest struct {
+	Name  string `json:"name"`
+	Email string `json:"email"`
+}
+
+type UpdateUserInput struct {
+	ID    int
+	Name  string
+	Email string
+}
+
 // ==================================================
 // 2. BUSINESS ERRORS
 // ==================================================
@@ -46,6 +57,7 @@ type UserRepository interface {
 	List() []User
 	FindByID(id int) (User, bool)
 	Create(name string, email string) User
+	UpdateByID(id int, name string, email string) (User, bool)
 	DeleteByID(id int) bool
 }
 
@@ -114,6 +126,23 @@ func (repository *MemoryUserRepository) Create(name string, email string) User {
 	return user
 }
 
+func (repository *MemoryUserRepository) UpdateByID(id int, name string, email string) (User, bool) {
+	repository.mutex.Lock()
+	defer repository.mutex.Unlock()
+
+	for index, user := range repository.users {
+		if user.ID == id {
+			user.Name = name
+			user.Email = email
+
+			repository.users[index] = user
+			return user, true
+		}
+	}
+
+	return User{}, false
+}
+
 func (repository *MemoryUserRepository) DeleteByID(id int) bool {
 	repository.mutex.Lock()
 	defer repository.mutex.Unlock()
@@ -177,6 +206,32 @@ func (service UserService) Create(
 		input.Name,
 		input.Email,
 	)
+
+	return user, nil
+}
+
+func (service UserService) UpdateByID(
+	input UpdateUserInput,
+) (User, error) {
+	input.Name = strings.TrimSpace(input.Name)
+	input.Email = strings.TrimSpace(input.Email)
+
+	if input.Name == "" {
+		return User{}, ErrNameRequired
+	}
+
+	if input.Email == "" {
+		return User{}, ErrEmailRequired
+	}
+
+	user, found := service.repository.UpdateByID(
+		input.ID,
+		input.Name,
+		input.Email,
+	)
+	if !found {
+		return User{}, ErrUserNotFound
+	}
 
 	return user, nil
 }
@@ -279,6 +334,65 @@ func (handler UserHandler) CreateHandler(
 	writeJSON(w, http.StatusCreated, user)
 }
 
+func (handler UserHandler) UpdateHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+	idText := r.PathValue("id")
+	id, err := strconv.Atoi(idText)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{
+			"error": "User ID tidak valid",
+		})
+		return
+	}
+
+	var request UpdateUserRequest
+
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+
+	if err := decoder.Decode(&request); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{
+			"error": "Data JSON tidak valid",
+		})
+		return
+	}
+
+	user, err := handler.service.UpdateByID(UpdateUserInput{
+		ID:    id,
+		Name:  request.Name,
+		Email: request.Email,
+	})
+
+	switch {
+	case errors.Is(err, ErrNameRequired),
+		errors.Is(err, ErrEmailRequired):
+		writeJSON(w, http.StatusBadRequest, map[string]string{
+			"error": err.Error(),
+		})
+		return
+
+	case errors.Is(err, ErrUserNotFound):
+		writeJSON(w, http.StatusNotFound, map[string]string{
+			"error": err.Error(),
+		})
+		return
+
+	case err != nil:
+		writeJSON(
+			w,
+			http.StatusInternalServerError,
+			map[string]string{
+				"error": "internal server error",
+			},
+		)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, user)
+}
+
 func (handler UserHandler) DeleteHandler(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -342,6 +456,7 @@ func main() {
 	mux.HandleFunc("GET /users", userHandler.ListHandler)
 	mux.HandleFunc("GET /users/{id}", userHandler.GetByIDHandler)
 	mux.HandleFunc("POST /users", userHandler.CreateHandler)
+	mux.HandleFunc("PUT /users/{id}", userHandler.UpdateHandler)
 	mux.HandleFunc("DELETE /users/{id}", userHandler.DeleteHandler)
 
 	log.Println("server berjalan di http://localhost:8080")

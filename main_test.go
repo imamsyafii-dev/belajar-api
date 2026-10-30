@@ -50,6 +50,7 @@ func (repository *FakeUserRepository) Create(
 
 	return user
 }
+
 func (repository *FakeUserRepository) DeleteByID(
 	id int,
 ) bool {
@@ -65,6 +66,23 @@ func (repository *FakeUserRepository) DeleteByID(
 	}
 
 	return false
+}
+
+func (repository *FakeUserRepository) UpdateByID(
+	id int,
+	name string,
+	email string,
+) (User, bool) {
+	for index, user := range repository.users {
+		if user.ID == id {
+			user.Name = name
+			user.Email = email
+
+			repository.users[index] = user
+			return user, true
+		}
+	}
+	return User{}, true
 }
 
 func TestUserServiceCreateSuccess(t *testing.T) {
@@ -318,6 +336,73 @@ func TestDeleteUserHandlerSuccess(t *testing.T) {
 		t.Errorf(
 			"expected no users, got %d",
 			len(repository.users),
+		)
+	}
+}
+
+func TestUpdateUserHandlerSuccess(t *testing.T) {
+	repository := &FakeUserRepository{
+		users: []User{
+			{
+				ID:    1,
+				Name:  "Imam",
+				Email: "imam@example.com",
+			},
+		},
+	}
+
+	service := NewUserService(repository)
+	handler := NewUserHandler(service)
+
+	mux := http.NewServeMux()
+	mux.HandleFunc(
+		"PUT /users/{id}",
+		handler.UpdateHandler,
+	)
+
+	body := strings.NewReader(`{
+		"name": "Imam Syafii",
+		"email": "imam.syafii@example.com"
+	}`)
+
+	request := httptest.NewRequest(
+		http.MethodPut,
+		"/users/1",
+		body,
+	)
+
+	response := httptest.NewRecorder()
+
+	mux.ServeHTTP(response, request)
+
+	if response.Code != http.StatusOK {
+		t.Fatalf(
+			"expected status %d, got %d",
+			http.StatusOK,
+			response.Code,
+		)
+	}
+
+	var user User
+
+	if err := json.NewDecoder(response.Body).Decode(&user); err != nil {
+		t.Fatalf(
+			"failed to decode response: %v",
+			err,
+		)
+	}
+
+	if user.Name != "Imam Syafii" {
+		t.Errorf(
+			"expected name Imam Syafii, got %s",
+			user.Name,
+		)
+	}
+
+	if repository.users[0].Email != "imam.syafii@example.com" {
+		t.Errorf(
+			"repository email was not updated: %s",
+			repository.users[0].Email,
 		)
 	}
 }
