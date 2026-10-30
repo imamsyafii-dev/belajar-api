@@ -46,6 +46,7 @@ type UserRepository interface {
 	List() []User
 	FindByID(id int) (User, bool)
 	Create(name string, email string) User
+	DeleteByID(id int) bool
 }
 
 // ==================================================
@@ -113,6 +114,22 @@ func (repository *MemoryUserRepository) Create(name string, email string) User {
 	return user
 }
 
+func (repository *MemoryUserRepository) DeleteByID(id int) bool {
+	repository.mutex.Lock()
+	defer repository.mutex.Unlock()
+
+	for index, user := range repository.users {
+		if user.ID == id {
+			repository.users = append(
+				repository.users[:index],
+				repository.users[index+1:]...,
+			)
+			return true
+		}
+	}
+	return false
+}
+
 // ==================================================
 // 5. SERVICE
 // Bagian baru yang berada di antara handler dan repository.
@@ -162,6 +179,15 @@ func (service UserService) Create(
 	)
 
 	return user, nil
+}
+
+func (service UserService) DeleteByID(id int) error {
+	deleted := service.repository.DeleteByID(id)
+	if !deleted {
+		return ErrUserNotFound
+	}
+
+	return nil
 }
 
 // ==================================================
@@ -253,6 +279,43 @@ func (handler UserHandler) CreateHandler(
 	writeJSON(w, http.StatusCreated, user)
 }
 
+func (handler UserHandler) DeleteHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+	idText := r.PathValue("id")
+
+	id, err := strconv.Atoi(idText)
+	if err != nil || id <= 0 {
+		writeJSON(w, http.StatusBadRequest, map[string]string{
+			"error": "User ID tidak valid",
+		})
+		return
+	}
+
+	err = handler.service.DeleteByID(id)
+
+	if errors.Is(err, ErrUserNotFound) {
+		writeJSON(w, http.StatusNotFound, map[string]string{
+			"error": ErrUserNotFound.Error(),
+		})
+		return
+	}
+
+	if err != nil {
+		writeJSON(
+			w,
+			http.StatusInternalServerError,
+			map[string]string{
+				"error": "internal server error",
+			},
+		)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
 // ==================================================
 // 7. JSON HELPER
 // ==================================================
@@ -279,6 +342,7 @@ func main() {
 	mux.HandleFunc("GET /users", userHandler.ListHandler)
 	mux.HandleFunc("GET /users/{id}", userHandler.GetByIDHandler)
 	mux.HandleFunc("POST /users", userHandler.CreateHandler)
+	mux.HandleFunc("DELETE /users/{id}", userHandler.DeleteHandler)
 
 	log.Println("server berjalan di http://localhost:8080")
 	if err := http.ListenAndServe(":8080", mux); err != nil {

@@ -50,6 +50,22 @@ func (repository *FakeUserRepository) Create(
 
 	return user
 }
+func (repository *FakeUserRepository) DeleteByID(
+	id int,
+) bool {
+	for index, user := range repository.users {
+		if user.ID == id {
+			repository.users = append(
+				repository.users[:index],
+				repository.users[index+1:]...,
+			)
+
+			return true
+		}
+	}
+
+	return false
+}
 
 func TestUserServiceCreateSuccess(t *testing.T) {
 	repository := &FakeUserRepository{
@@ -257,5 +273,51 @@ func TestCreateUserHandlerNameRequired(t *testing.T) {
 
 	if len(repository.users) != 0 {
 		t.Error("repository should not create a user")
+	}
+}
+
+func TestDeleteUserHandlerSuccess(t *testing.T) {
+	repository := &FakeUserRepository{
+		users: []User{
+			{
+				ID:    1,
+				Name:  "Citra",
+				Email: "citra@example.com",
+			},
+		},
+	}
+
+	service := NewUserService(repository)
+	handler := NewUserHandler(service)
+
+	mux := http.NewServeMux()
+	mux.HandleFunc(
+		"DELETE /users/{id}",
+		handler.DeleteHandler,
+	)
+
+	request := httptest.NewRequest(
+		http.MethodDelete,
+		"/users/1",
+		nil,
+	)
+
+	response := httptest.NewRecorder()
+
+	mux.ServeHTTP(response, request)
+
+	if response.Code != http.StatusNoContent {
+		t.Fatalf(
+			"expected status %d, got %d",
+			http.StatusNoContent,
+			response.Code,
+		)
+	}
+
+	if len(repository.users) != 0 {
+		t.Errorf(
+			"expected no users, got %d",
+			len(repository.users),
+		)
 	}
 }
