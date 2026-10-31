@@ -38,7 +38,7 @@ func (repository *FakeUserRepository) FindByID(
 func (repository *FakeUserRepository) Create(
 	name string,
 	email string,
-) User {
+) (User, error) {
 	repository.createdName = name
 	repository.createdEmail = email
 
@@ -51,7 +51,7 @@ func (repository *FakeUserRepository) Create(
 	repository.users = append(repository.users, user)
 	repository.nextID++
 
-	return user
+	return user, nil
 }
 
 func (repository *FakeUserRepository) DeleteByID(

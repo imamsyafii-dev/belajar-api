@@ -67,10 +67,14 @@ func (service UserService) Create(
 		return User{}, ErrEmailRequired
 	}
 
-	user := service.repository.Create(
+	user, err := service.repository.Create(
 		input.Name,
 		input.Email,
 	)
+
+	if err != nil {
+		return User{}, err
+	}
 
 	return user, nil
 }
