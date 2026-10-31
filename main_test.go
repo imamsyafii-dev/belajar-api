@@ -75,17 +75,17 @@ func (repository *FakeUserRepository) UpdateByID(
 	id int,
 	name string,
 	email string,
-) (User, bool) {
+) (User, bool, error) {
 	for index, user := range repository.users {
 		if user.ID == id {
 			user.Name = name
 			user.Email = email
 
 			repository.users[index] = user
-			return user, true
+			return user, true, nil
 		}
 	}
-	return User{}, true
+	return User{}, true, nil
 }
 
 func TestUserServiceCreateSuccess(t *testing.T) {

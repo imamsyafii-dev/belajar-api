@@ -73,7 +73,11 @@ func (repository *MemoryUserRepository) Create(name string, email string) (
 	return user, nil
 }
 
-func (repository *MemoryUserRepository) UpdateByID(id int, name string, email string) (User, bool) {
+func (repository *MemoryUserRepository) UpdateByID(id int, name string, email string) (
+	User,
+	bool,
+	error,
+) {
 	repository.mutex.Lock()
 	defer repository.mutex.Unlock()
 
@@ -83,11 +87,11 @@ func (repository *MemoryUserRepository) UpdateByID(id int, name string, email st
 			user.Email = email
 
 			repository.users[index] = user
-			return user, true
+			return user, true, nil
 		}
 	}
 
-	return User{}, false
+	return User{}, false, nil
 }
 
 func (repository *MemoryUserRepository) DeleteByID(id int) bool {

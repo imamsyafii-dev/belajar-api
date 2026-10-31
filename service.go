@@ -93,11 +93,16 @@ func (service UserService) UpdateByID(
 		return User{}, ErrEmailRequired
 	}
 
-	user, found := service.repository.UpdateByID(
+	user, found, err := service.repository.UpdateByID(
 		input.ID,
 		input.Name,
 		input.Email,
 	)
+
+	if err != nil {
+		return User{}, err
+	}
+
 	if !found {
 		return User{}, ErrUserNotFound
 	}

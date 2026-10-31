@@ -170,6 +170,16 @@ func (handler UserHandler) UpdateHandler(
 			},
 		)
 		return
+
+	case err != nil:
+		writeJSON(
+			w,
+			http.StatusInternalServerError,
+			map[string]string{
+				"error": "internal server error",
+			},
+		)
+		return
 	}
 
 	writeJSON(w, http.StatusOK, user)
