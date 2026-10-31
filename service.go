@@ -40,7 +40,11 @@ func (service UserService) List() (
 }
 
 func (service UserService) GetByID(id int) (User, error) {
-	user, found := service.repository.FindByID(id)
+	user, found, err := service.repository.FindByID(id)
+	if err != nil {
+		return User{}, err
+	}
+
 	if !found {
 		return User{}, ErrUserNotFound
 	}

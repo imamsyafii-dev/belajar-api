@@ -25,14 +25,14 @@ func (repository *FakeUserRepository) List() (
 
 func (repository *FakeUserRepository) FindByID(
 	id int,
-) (User, bool) {
+) (User, bool, error) {
 	for _, user := range repository.users {
 		if user.ID == id {
-			return user, true
+			return user, true, nil
 		}
 	}
 
-	return User{}, false
+	return User{}, false, nil
 }
 
 func (repository *FakeUserRepository) Create(

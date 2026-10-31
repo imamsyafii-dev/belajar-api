@@ -60,6 +60,17 @@ func (handler UserHandler) GetByIDHandler(
 		return
 	}
 
+	if err != nil {
+		writeJSON(
+			w,
+			http.StatusInternalServerError,
+			map[string]string{
+				"error": "internal server error",
+			},
+		)
+		return
+	}
+
 	writeJSON(w, http.StatusOK, user)
 }
 

@@ -42,17 +42,17 @@ func (repository *MemoryUserRepository) List() (
 	return users, nil
 }
 
-func (repository *MemoryUserRepository) FindByID(id int) (User, bool) {
+func (repository *MemoryUserRepository) FindByID(id int) (User, bool, error) {
 	repository.mutex.RLock()
 	defer repository.mutex.RUnlock()
 
 	for _, user := range repository.users {
 		if user.ID == id {
-			return user, true
+			return user, true, nil
 		}
 	}
 
-	return User{}, false
+	return User{}, false, nil
 }
 
 func (repository *MemoryUserRepository) Create(name string, email string) User {
