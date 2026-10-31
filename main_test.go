@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -16,7 +17,9 @@ type FakeUserRepository struct {
 	createdEmail string
 }
 
-func (repository *FakeUserRepository) List() (
+func (repository *FakeUserRepository) List(
+	_ context.Context,
+) (
 	[]User,
 	error,
 ) {

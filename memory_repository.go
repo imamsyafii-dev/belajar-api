@@ -1,6 +1,9 @@
 package main
 
-import "sync"
+import (
+	"context"
+	"sync"
+)
 
 // ==================================================
 // MEMORY REPOSITORY
@@ -29,7 +32,9 @@ func NewMemoryUserRepository() *MemoryUserRepository {
 	}
 }
 
-func (repository *MemoryUserRepository) List() (
+func (repository *MemoryUserRepository) List(
+	_ context.Context,
+) (
 	[]User,
 	error,
 ) {

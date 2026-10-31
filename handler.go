@@ -25,7 +25,7 @@ func (handler UserHandler) ListHandler(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
-	users, err := handler.service.List()
+	users, err := handler.service.List(r.Context())
 	if err != nil {
 		writeJSON(
 			w,

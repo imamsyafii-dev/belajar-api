@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"strings"
 )
@@ -27,11 +28,13 @@ func NewUserService(repository UserRepository) *UserService {
 	}
 }
 
-func (service UserService) List() (
+func (service UserService) List(
+	ctx context.Context,
+) (
 	[]User,
 	error,
 ) {
-	users, err := service.repository.List()
+	users, err := service.repository.List(ctx)
 	if err != nil {
 		return nil, err
 	}
