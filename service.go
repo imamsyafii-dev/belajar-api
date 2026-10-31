@@ -27,8 +27,16 @@ func NewUserService(repository UserRepository) *UserService {
 	}
 }
 
-func (service UserService) List() []User {
-	return service.repository.List()
+func (service UserService) List() (
+	[]User,
+	error,
+) {
+	users, err := service.repository.List()
+	if err != nil {
+		return nil, err
+	}
+
+	return users, nil
 }
 
 func (service UserService) GetByID(id int) (User, error) {

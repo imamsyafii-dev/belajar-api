@@ -16,8 +16,11 @@ type FakeUserRepository struct {
 	createdEmail string
 }
 
-func (repository *FakeUserRepository) List() []User {
-	return repository.users
+func (repository *FakeUserRepository) List() (
+	[]User,
+	error,
+) {
+	return repository.users, nil
 }
 
 func (repository *FakeUserRepository) FindByID(

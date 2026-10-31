@@ -29,14 +29,17 @@ func NewMemoryUserRepository() *MemoryUserRepository {
 	}
 }
 
-func (repository *MemoryUserRepository) List() []User {
+func (repository *MemoryUserRepository) List() (
+	[]User,
+	error,
+) {
 	repository.mutex.RLock()
 	defer repository.mutex.RUnlock()
 
 	users := make([]User, len(repository.users))
 	copy(users, repository.users)
 
-	return users
+	return users, nil
 }
 
 func (repository *MemoryUserRepository) FindByID(id int) (User, bool) {

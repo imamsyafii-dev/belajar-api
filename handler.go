@@ -25,7 +25,16 @@ func (handler UserHandler) ListHandler(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
-	users := handler.service.List()
+	users, err := handler.service.List()
+	if err != nil {
+		writeJSON(
+			w,
+			http.StatusInternalServerError,
+			map[string]string{
+				"error": "internal server error",
+			},
+		)
+	}
 
 	writeJSON(w, http.StatusOK, users)
 }
