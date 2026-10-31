@@ -1,15 +1,26 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
+	"os"
 )
 
-// ==================================================
-// 8. MAIN
-// Membuat dan menghubungkan semua dependency.
-// ==================================================
 func main() {
+	ctx := context.Background()
+
+	databaseURL := os.Getenv("DATABASE_URL")
+	if databaseURL == "" {
+		log.Fatal("DATABASE_URL wajib diisi")
+	}
+
+	pool, err := NewPostgresPool(ctx, databaseURL)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer pool.Close()
+
 	repository := NewMemoryUserRepository()
 	service := NewUserService(repository)
 	userHandler := NewUserHandler(service)
