@@ -111,7 +111,10 @@ func (service UserService) UpdateByID(
 }
 
 func (service UserService) DeleteByID(id int) error {
-	deleted := service.repository.DeleteByID(id)
+	deleted, err := service.repository.DeleteByID(id)
+	if err != nil {
+		return err
+	}
 	if !deleted {
 		return ErrUserNotFound
 	}

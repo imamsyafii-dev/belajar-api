@@ -56,7 +56,7 @@ func (repository *FakeUserRepository) Create(
 
 func (repository *FakeUserRepository) DeleteByID(
 	id int,
-) bool {
+) (bool, error) {
 	for index, user := range repository.users {
 		if user.ID == id {
 			repository.users = append(
@@ -64,11 +64,11 @@ func (repository *FakeUserRepository) DeleteByID(
 				repository.users[index+1:]...,
 			)
 
-			return true
+			return true, nil
 		}
 	}
 
-	return false
+	return false, nil
 }
 
 func (repository *FakeUserRepository) UpdateByID(

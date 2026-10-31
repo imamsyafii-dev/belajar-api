@@ -94,7 +94,10 @@ func (repository *MemoryUserRepository) UpdateByID(id int, name string, email st
 	return User{}, false, nil
 }
 
-func (repository *MemoryUserRepository) DeleteByID(id int) bool {
+func (repository *MemoryUserRepository) DeleteByID(id int) (
+	bool,
+	error,
+) {
 	repository.mutex.Lock()
 	defer repository.mutex.Unlock()
 
@@ -104,8 +107,8 @@ func (repository *MemoryUserRepository) DeleteByID(id int) bool {
 				repository.users[:index],
 				repository.users[index+1:]...,
 			)
-			return true
+			return true, nil
 		}
 	}
-	return false
+	return false, nil
 }
