@@ -15,6 +15,7 @@ type FakeUserRepository struct {
 	nextID       int
 	createdName  string
 	createdEmail string
+	createError  error
 }
 
 func (repository *FakeUserRepository) List(
@@ -44,6 +45,10 @@ func (repository *FakeUserRepository) Create(
 	name string,
 	email string,
 ) (User, error) {
+	if repository.createError != nil {
+		return User{}, repository.createError
+	}
+
 	repository.createdName = name
 	repository.createdEmail = email
 
@@ -420,6 +425,52 @@ func TestUpdateUserHandlerSuccess(t *testing.T) {
 		t.Errorf(
 			"repository email was not updated: %s",
 			repository.users[0].Email,
+		)
+	}
+}
+
+func TestCreateUserHandlerEmailAlreadyUsed(t *testing.T) {
+	repository := &FakeUserRepository{
+		createError: ErrEmailAlreadyUsed,
+	}
+
+	service := NewUserService(repository)
+	handler := NewUserHandler(service)
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("POST /users", handler.CreateHandler)
+
+	request := httptest.NewRequest(
+		http.MethodPost,
+		"/users",
+		strings.NewReader(`{
+			"name": "Citra",
+			"email": "citra@example.com"
+		}`),
+	)
+	response := httptest.NewRecorder()
+
+	mux.ServeHTTP(response, request)
+
+	if response.Code != http.StatusConflict {
+		t.Fatalf(
+			"expected status %d, got %d",
+			http.StatusConflict,
+			response.Code,
+		)
+	}
+
+	var result map[string]string
+
+	if err := json.NewDecoder(response.Body).Decode(&result); err != nil {
+		t.Fatalf("failed to decode response: %v", err)
+	}
+
+	if result["error"] != ErrEmailAlreadyUsed.Error() {
+		t.Errorf(
+			"expected error %q, got %q",
+			ErrEmailAlreadyUsed.Error(),
+			result["error"],
 		)
 	}
 }
