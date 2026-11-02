@@ -27,6 +27,7 @@ func (repository *FakeUserRepository) List(
 }
 
 func (repository *FakeUserRepository) FindByID(
+	_ context.Context,
 	id int,
 ) (User, bool, error) {
 	for _, user := range repository.users {
@@ -157,13 +158,14 @@ func TestUserServiceCreateNameRequired(t *testing.T) {
 }
 
 func TestUserServiceGetByIDNotFound(t *testing.T) {
+	ctx := context.Background()
 	repository := &FakeUserRepository{
 		users: []User{},
 	}
 
 	service := NewUserService(repository)
 
-	_, err := service.GetByID(99)
+	_, err := service.GetByID(ctx,99)
 
 	if !errors.Is(err, ErrUserNotFound) {
 		t.Fatalf(

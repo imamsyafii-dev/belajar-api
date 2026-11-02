@@ -47,7 +47,10 @@ func (repository *MemoryUserRepository) List(
 	return users, nil
 }
 
-func (repository *MemoryUserRepository) FindByID(id int) (User, bool, error) {
+func (repository *MemoryUserRepository) FindByID(
+	ctx context.Context,
+	id int,
+) (User, bool, error) {
 	repository.mutex.RLock()
 	defer repository.mutex.RUnlock()
 

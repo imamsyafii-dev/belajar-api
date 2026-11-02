@@ -52,7 +52,7 @@ func (handler UserHandler) GetByIDHandler(
 		return
 	}
 
-	user, err := handler.service.GetByID(id)
+	user, err := handler.service.GetByID(r.Context(), id)
 	if errors.Is(err, ErrUserNotFound) {
 		writeJSON(w, http.StatusNotFound, map[string]string{
 			"error": "Data tidak ditemukan",

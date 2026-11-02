@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -59,4 +60,41 @@ func (repository *PostgresUserRepository) List(
 	}
 
 	return users, nil
+}
+
+func (repository *PostgresUserRepository) FindByID(
+	ctx context.Context,
+	id int,
+) (
+	User,
+	bool,
+	error,
+) {
+	var user User
+
+	err := repository.pool.QueryRow(
+		ctx,
+		`
+			SELECT id, name, email
+			FROM users
+			WHERE id = $1
+		`,
+		id,
+	).Scan(
+		&user.ID,
+		&user.Name,
+		&user.Email,
+	)
+
+	if err == pgx.ErrNoRows {
+		return User{}, false, nil
+	}
+
+	if err != nil {
+		return User{}, false, fmt.Errorf(
+			"query user by id: %w", err,
+		)
+	}
+
+	return user, true, nil
 }
