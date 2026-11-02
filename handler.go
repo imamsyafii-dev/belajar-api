@@ -143,11 +143,13 @@ func (handler UserHandler) UpdateHandler(
 		return
 	}
 
-	user, err := handler.service.UpdateByID(UpdateUserInput{
-		ID:    id,
-		Name:  request.Name,
-		Email: request.Email,
-	})
+	user, err := handler.service.UpdateByID(
+		r.Context(),
+		UpdateUserInput{
+			ID:    id,
+			Name:  request.Name,
+			Email: request.Email,
+		})
 
 	switch {
 	case errors.Is(err, ErrNameRequired),
@@ -161,16 +163,6 @@ func (handler UserHandler) UpdateHandler(
 		writeJSON(w, http.StatusNotFound, map[string]string{
 			"error": err.Error(),
 		})
-		return
-
-	case err != nil:
-		writeJSON(
-			w,
-			http.StatusInternalServerError,
-			map[string]string{
-				"error": "internal server error",
-			},
-		)
 		return
 
 	case err != nil:
@@ -201,7 +193,7 @@ func (handler UserHandler) DeleteHandler(
 		return
 	}
 
-	err = handler.service.DeleteByID(id)
+	err = handler.service.DeleteByID(r.Context(), id)
 
 	if errors.Is(err, ErrUserNotFound) {
 		writeJSON(w, http.StatusNotFound, map[string]string{

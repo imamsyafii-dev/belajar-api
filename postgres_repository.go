@@ -98,3 +98,71 @@ func (repository *PostgresUserRepository) FindByID(
 
 	return user, true, nil
 }
+
+func (repository *PostgresUserRepository) UpdateByID(
+	ctx context.Context,
+	id int,
+	name string,
+	email string,
+) (
+	User,
+	bool,
+	error,
+) {
+	var user User
+
+	err := repository.pool.QueryRow(
+		ctx,
+		`
+			UPDATE users
+			SET name = $1, email = $2
+			WHERE id = $3
+			RETURNING id, name, email
+		`,
+		name,
+		email,
+		id,
+	).Scan(
+		&user.ID,
+		&user.Name,
+		&user.Email,
+	)
+
+	if err == pgx.ErrNoRows {
+		return User{}, false, nil
+	}
+
+	if err != nil {
+		return User{}, false, fmt.Errorf(
+			"update user: %w",
+			err,
+		)
+	}
+
+	return user, true, nil
+}
+
+func (repository *PostgresUserRepository) DeleteByID(
+	ctx context.Context,
+	id int,
+) (
+	bool,
+	error,
+) {
+	commandTag, err := repository.pool.Exec(
+		ctx,
+		`
+			DELETE FROM users
+			WHERE id = $1
+		`,
+		id,
+	)
+	if err != nil {
+		return false, fmt.Errorf(
+			"delete user: %w",
+			err,
+		)
+	}
+
+	return commandTag.RowsAffected() == 1, nil
+}

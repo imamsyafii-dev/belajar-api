@@ -88,6 +88,7 @@ func (service UserService) Create(
 }
 
 func (service UserService) UpdateByID(
+	ctx context.Context,
 	input UpdateUserInput,
 ) (User, error) {
 	input.Name = strings.TrimSpace(input.Name)
@@ -102,6 +103,7 @@ func (service UserService) UpdateByID(
 	}
 
 	user, found, err := service.repository.UpdateByID(
+		ctx,
 		input.ID,
 		input.Name,
 		input.Email,
@@ -118,8 +120,11 @@ func (service UserService) UpdateByID(
 	return user, nil
 }
 
-func (service UserService) DeleteByID(id int) error {
-	deleted, err := service.repository.DeleteByID(id)
+func (service UserService) DeleteByID(
+	ctx context.Context,
+	id int,
+) error {
+	deleted, err := service.repository.DeleteByID(ctx, id)
 	if err != nil {
 		return err
 	}

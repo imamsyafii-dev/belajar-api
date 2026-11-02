@@ -85,7 +85,12 @@ func (repository *MemoryUserRepository) Create(
 	return user, nil
 }
 
-func (repository *MemoryUserRepository) UpdateByID(id int, name string, email string) (
+func (repository *MemoryUserRepository) UpdateByID(
+	_ context.Context,
+	id int,
+	name string,
+	email string,
+) (
 	User,
 	bool,
 	error,
@@ -106,7 +111,10 @@ func (repository *MemoryUserRepository) UpdateByID(id int, name string, email st
 	return User{}, false, nil
 }
 
-func (repository *MemoryUserRepository) DeleteByID(id int) (
+func (repository *MemoryUserRepository) DeleteByID(
+	_ context.Context,
+	id int,
+) (
 	bool,
 	error,
 ) {

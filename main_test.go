@@ -60,6 +60,7 @@ func (repository *FakeUserRepository) Create(
 }
 
 func (repository *FakeUserRepository) DeleteByID(
+	_ context.Context,
 	id int,
 ) (bool, error) {
 	for index, user := range repository.users {
@@ -77,6 +78,7 @@ func (repository *FakeUserRepository) DeleteByID(
 }
 
 func (repository *FakeUserRepository) UpdateByID(
+	_ context.Context,
 	id int,
 	name string,
 	email string,
@@ -90,7 +92,7 @@ func (repository *FakeUserRepository) UpdateByID(
 			return user, true, nil
 		}
 	}
-	return User{}, true, nil
+	return User{}, false, nil
 }
 
 func TestUserServiceCreateSuccess(t *testing.T) {
