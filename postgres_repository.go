@@ -62,6 +62,40 @@ func (repository *PostgresUserRepository) List(
 	return users, nil
 }
 
+func (repository *PostgresUserRepository) Create(
+	ctx context.Context,
+	name string,
+	email string,
+) (
+	User,
+	error,
+) {
+	var user User
+
+	err := repository.pool.QueryRow(
+		ctx,
+		`
+			INSERT INTO users (name, email)
+			VALUES ($1, $2)
+			RETURNING id, name, email
+		`,
+		name,
+		email,
+	).Scan(
+		&user.ID,
+		&user.Name,
+		&user.Email,
+	)
+	if err != nil {
+		return User{}, fmt.Errorf(
+			"create user: %w",
+			err,
+		)
+	}
+
+	return user, nil
+}
+
 func (repository *PostgresUserRepository) FindByID(
 	ctx context.Context,
 	id int,

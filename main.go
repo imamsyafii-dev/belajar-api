@@ -21,7 +21,7 @@ func main() {
 	}
 	defer pool.Close()
 
-	repository := NewMemoryUserRepository()
+	repository := NewPostgresUserRepository(pool)
 	service := NewUserService(repository)
 	userHandler := NewUserHandler(service)
 
