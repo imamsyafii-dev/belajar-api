@@ -40,6 +40,7 @@ func (repository *FakeUserRepository) FindByID(
 }
 
 func (repository *FakeUserRepository) Create(
+	ctx context.Context,
 	name string,
 	email string,
 ) (User, error) {
@@ -93,15 +94,18 @@ func (repository *FakeUserRepository) UpdateByID(
 }
 
 func TestUserServiceCreateSuccess(t *testing.T) {
+	ctx := context.Background()
 	repository := &FakeUserRepository{
 		nextID: 10,
 	}
 
 	service := NewUserService(repository)
-	user, err := service.Create(CreateUserInput{
-		Name:  " Citra ",
-		Email: " citra@example.com ",
-	})
+	user, err := service.Create(
+		ctx,
+		CreateUserInput{
+			Name:  " Citra ",
+			Email: " citra@example.com ",
+		})
 
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
@@ -134,16 +138,19 @@ func TestUserServiceCreateSuccess(t *testing.T) {
 }
 
 func TestUserServiceCreateNameRequired(t *testing.T) {
+	ctx := context.Background()
 	repository := &FakeUserRepository{
 		nextID: 1,
 	}
 
 	service := NewUserService(repository)
 
-	_, err := service.Create(CreateUserInput{
-		Name:  "     ",
-		Email: "citra@example.com",
-	})
+	_, err := service.Create(
+		ctx,
+		CreateUserInput{
+			Name:  "     ",
+			Email: "citra@example.com",
+		})
 
 	if !errors.Is(err, ErrNameRequired) {
 		t.Fatalf(
@@ -165,7 +172,7 @@ func TestUserServiceGetByIDNotFound(t *testing.T) {
 
 	service := NewUserService(repository)
 
-	_, err := service.GetByID(ctx,99)
+	_, err := service.GetByID(ctx, 99)
 
 	if !errors.Is(err, ErrUserNotFound) {
 		t.Fatalf(

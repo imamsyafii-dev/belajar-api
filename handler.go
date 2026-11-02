@@ -90,10 +90,12 @@ func (handler UserHandler) CreateHandler(
 		return
 	}
 
-	user, err := handler.service.Create(CreateUserInput{
-		Name:  input.Name,
-		Email: input.Email,
-	})
+	user, err := handler.service.Create(
+		r.Context(),
+		CreateUserInput{
+			Name:  input.Name,
+			Email: input.Email,
+		})
 
 	if errors.Is(err, ErrNameRequired) ||
 		errors.Is(err, ErrEmailRequired) {

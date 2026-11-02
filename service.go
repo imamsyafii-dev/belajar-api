@@ -59,6 +59,7 @@ func (service UserService) GetByID(
 }
 
 func (service UserService) Create(
+	ctx context.Context,
 	input CreateUserInput,
 ) (User, error) {
 	// Validasi dipindahkan dari handler ke service.
@@ -74,6 +75,7 @@ func (service UserService) Create(
 	}
 
 	user, err := service.repository.Create(
+		ctx,
 		input.Name,
 		input.Email,
 	)

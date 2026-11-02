@@ -63,7 +63,11 @@ func (repository *MemoryUserRepository) FindByID(
 	return User{}, false, nil
 }
 
-func (repository *MemoryUserRepository) Create(name string, email string) (
+func (repository *MemoryUserRepository) Create(
+	ctx context.Context,
+	name string,
+	email string,
+) (
 	User,
 	error,
 ) {
