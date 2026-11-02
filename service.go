@@ -12,6 +12,7 @@ import (
 var ErrUserNotFound = errors.New("user tidak ditemukan")
 var ErrNameRequired = errors.New("name wajib diisi")
 var ErrEmailRequired = errors.New("email wajib diisi")
+var ErrEmailAlreadyUsed = errors.New("email sudah digunakan")
 
 // ==================================================
 // SERVICE

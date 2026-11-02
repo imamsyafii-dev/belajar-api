@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -86,6 +88,11 @@ func (repository *PostgresUserRepository) Create(
 		&user.Name,
 		&user.Email,
 	)
+
+	if isUniqueViolation(err) {
+		return User{}, ErrEmailAlreadyUsed
+	}
+
 	if err != nil {
 		return User{}, fmt.Errorf(
 			"create user: %w",
@@ -166,6 +173,10 @@ func (repository *PostgresUserRepository) UpdateByID(
 		return User{}, false, nil
 	}
 
+	if isUniqueViolation(err) {
+		return User{}, false, ErrEmailAlreadyUsed
+	}
+
 	if err != nil {
 		return User{}, false, fmt.Errorf(
 			"update user: %w",
@@ -199,4 +210,14 @@ func (repository *PostgresUserRepository) DeleteByID(
 	}
 
 	return commandTag.RowsAffected() == 1, nil
+}
+
+// ==================================================
+// Helper Functions
+// ==================================================
+func isUniqueViolation(err error) bool {
+	var postgresError *pgconn.PgError
+
+	return errors.As(err, &postgresError) &&
+		postgresError.Code == "23505" // unique_violation
 }

@@ -105,6 +105,13 @@ func (handler UserHandler) CreateHandler(
 		return
 	}
 
+	if errors.Is(err, ErrEmailAlreadyUsed) {
+		writeJSON(w, http.StatusConflict, map[string]string{
+			"error": err.Error(),
+		})
+		return
+	}
+
 	if err != nil {
 		writeJSON(
 			w,
@@ -161,6 +168,12 @@ func (handler UserHandler) UpdateHandler(
 
 	case errors.Is(err, ErrUserNotFound):
 		writeJSON(w, http.StatusNotFound, map[string]string{
+			"error": err.Error(),
+		})
+		return
+
+	case errors.Is(err, ErrEmailAlreadyUsed):
+		writeJSON(w, http.StatusConflict, map[string]string{
 			"error": err.Error(),
 		})
 		return
