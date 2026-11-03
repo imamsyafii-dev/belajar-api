@@ -33,3 +33,6 @@ jobs:
 
       - name: Build application
         run: go build ./...
+
+      - name: Build Docker image
+        run: docker build -t belajar-api:${{ github.sha }} .
