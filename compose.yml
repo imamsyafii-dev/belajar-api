@@ -9,6 +9,7 @@ services:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./migrations/001_create_users.sql:/docker-entrypoint-initdb.d/001_create_users.sql:ro
     healthcheck:
       test:
         [
@@ -18,6 +19,17 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+  
+  api:
+    build:
+      context: .
+    ports:
+      - "8080:8080"
+    environment:
+      DATABASE_URL: postgres://belajar:belajar@postgres:5432/belajar_api?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
 
 volumes:
   postgres_data:
